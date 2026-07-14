@@ -1,0 +1,45 @@
+id: peoplesoft-detect
+
+info:
+  name: Oracle PeopleSoft PIA - Detect
+  author: Sourabh Grover
+  severity: info
+  description: |
+    Detects Oracle PeopleSoft PeopleSoft Internet Architecture (PIA) instances
+    by checking common sign-on paths (/ps/signon.html, /psp/ps/?cmd=login) on
+    the scanned host and on port 8443, matching "peoplesoft" in the response
+    body (case-insensitive) and/or PS_LOGIN / PS_TOKEN cookies in the response.
+    This is a technology fingerprint only and does not test for any specific
+    CVE. PeopleSoft PeopleTools has been subject to actively exploited critical
+    vulnerabilities (e.g. CVE-2026-35273, CVE-2026-35278); this template can be
+    used to build an asset inventory of PeopleSoft instances prior to running
+    CVE-specific checks.
+  reference:
+    - https://docs.oracle.com/cd/E52319_01/infoportal/pia.html
+  metadata:
+    verified: false
+    max-request: 4
+    vendor: oracle
+    product: peoplesoft_peopletools
+    shodan-query: title:"PeopleSoft"
+  tags: tech,peoplesoft,oracle,detect,http
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/ps/signon.html"
+      - "{{BaseURL}}/psp/ps/?cmd=login"
+      - "https://{{Hostname}}:8443/ps/signon.html"
+      - "https://{{Hostname}}:8443/psp/ps/?cmd=login"
+
+    stop-at-first-match: true
+
+    matchers-condition: or
+    matchers:
+      - type: dsl
+        dsl:
+          - 'contains(tolower(body), "peoplesoft")'
+
+      - type: dsl
+        dsl:
+          - 'contains(tolower(header), "ps_login") || contains(tolower(header), "ps_token")'
